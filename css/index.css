@@ -1,0 +1,302 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Montserrat";
+    overflow-x: hidden;
+}
+
+#map {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+}
+
+.mapboxgl-ctrl-bottom-left {
+    right: 0;
+    bottom: 0px;
+}
+
+#fade {
+    display: block;
+    position: relative;
+    margin: 0px auto;
+    width: 100%;
+    height: 40px;
+    padding: 10px;
+    border: none;
+    border-radius: 3px;
+    font-size: 12px;
+    text-align: center;
+    color: #fff;
+    background: #ee8a65;
+}
+
+.map-overlay {
+    font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+    position: absolute;
+    width: 25%;
+    top: 0;
+    left: 0;
+    padding: 10px;
+}
+
+.map-overlay .map-overlay-inner {
+    background-color: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.map-overlay h2 {
+    line-height: 24px;
+    display: block;
+    margin: 0 0 10px;
+}
+
+.map-overlay input {
+    background-color: transparent;
+    display: inline-block;
+    width: 100%;
+    position: relative;
+    margin: 0;
+    cursor: ew-resize;
+    text-align: center;
+    font-weight: normal;
+}
+
+#header {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.6);
+    height: 45px;
+    top: 0px;
+    left: 0px;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    z-index: 900;
+}
+
+img {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    height: 45px;
+}
+
+h2 {
+    color: white;
+    border-radius: 3px;
+    margin: auto;
+    background-color: #091f40;
+    font-size: 22px;
+    padding: 5px;
+}
+
+.button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: #04AA6D ;
+    border: none;
+    color: white;
+    padding: 5px 20px;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 2px;
+    display: inline-block;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.button1:hover {
+    background-color: red;
+    color: white;
+}
+
+#peace_process {
+    overflow-y: auto;
+    background-color: rgba(0, 0, 0, 0.85);
+    /* overflow-x: hidden; */
+    color: white;
+    position: absolute;
+    /* right: -400px; */
+    top: 55px;
+    z-index: 900;
+    border-radius: 3px;
+}
+
+#year_process {
+    direction: rtl;
+    background-color: rgba(0, 0, 0, 0.85);
+    /* overflow-y: auto;
+    overflow-x: hidden; */
+    color: white;
+    position: absolute;
+    bottom: 30px;
+    /* width: 400px; */
+    z-index: 900;
+    border-radius: 5px;
+}
+
+#month_process {
+    direction: rtl;
+    background-color: rgba(0, 0, 0, 0.85);
+    /* overflow-y: auto;
+    overflow-x: hidden; */
+    color: white;
+    position: absolute;
+    top: 55px;
+    /* width: 400px; */
+    z-index: 900;
+    border-radius: 5px;
+}
+
+pre {
+    margin-top: 2px;
+    margin-bottom: 2px;
+    font-size: 14px;
+    direction: ltr;
+    padding-left: 15px;
+    padding-right: 15px;
+    overflow-x: visible;
+    white-space: pre-wrap;
+    font-family: "Montserrat";
+}
+
+h1 {
+    color: white;
+    margin: auto;
+}
+
+#peace_title_div,
+#year_title_div,
+#month_title_div {
+    text-align: center;
+    position: fixed;
+    border-radius: 5px;
+}
+
+/* width */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    /* box-shadow: inset 0 0 5px grey; */
+    border-radius: 3px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: rgb(255, 255, 255);
+    border-radius: 3px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #b30000;
+}
+
+#dropdown {
+    position: absolute;
+    top: 5px;
+    right: 68.58px;
+    height: 33.2px;
+    color: white;
+    background: #091f40;
+    border: none;
+    border-radius: 3px;
+    font-family: 'Montserrat';
+    font-size: 15px;
+}
+
+/* a:link {
+            color: #feda00;
+            background-color: transparent;
+            text-decoration: none;
+        } */
+
+a:-webkit-any-link:hover {
+    color: red;
+    background-color: transparent;
+    text-decoration: underline;
+}
+
+pre a:-webkit-any-link {
+    color: #feda00;
+    cursor: pointer;
+}
+
+#gradient {
+    position: absolute;
+    bottom: 40px;
+    right: 120px;
+    height: 50px;
+}
+
+.legendTitle {
+	font-size: 15px;
+	fill: #4F4F4F;
+	font-weight: 12;
+}
+
+.axis path, .axis line {
+	fill: none;
+	stroke: none; /*black;*/
+	shape-rendering: crispEdges;
+}
+
+.axis text {
+	font-family: "Montserrat";
+ 	fill: white;
+	font-size: 9pt;
+}
+
+#update {
+    font-size: 12px;
+    color: white;
+    position: absolute;
+    bottom: 5px;
+    right: 120px;
+}
+
+#year_content, #month_content, #peace_content{
+    position: absolute;
+    overflow-y: auto;
+    top: 39px;
+    font-size: 14px;
+}
+
+#legend_p {
+    color: white;
+    font-size: 12px;
+    margin-top: 0px;
+    margin-bottom: 3px;
+}
+
+.float-container {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    width: 10px;
+    z-index: 999;
+    /* border: 3px solid #fff; */
+    padding: 10px;
+    
+}
+
+.float-child {
+    align-content: center;
+    width: 10%;
+    direction: rtl;
+    /* float: right; */
+    /* padding: 10px; */
+    /* border: 2px solid red; */
+} 
+
+#icon_leg {
+    position: relative;
+}

@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>PeaceRep</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.js"></script>
+    <script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="icon" type="image/png" href="img/peace.png">
+    <script src="js/d3.js" type="text/javascript"></script>
+    <script src="js/all_countries.js"></script>
+</head>
+
+<body>
+    <style>
+    </style>
+    <div id="header">
+        <img src="img/logo.png" alt="PeaceRep Logo" />
+        <button class="button button1"><i class="fa fa-refresh" style="color:black"></i></button>
+        <select id="dropdown">
+            <option selected="selected">Choose a country</option>
+        </select>
+        <h1 id="big_title">Conflict and Peace Process Map</h1>
+    </div>
+    <div id="peace_process">
+        <div id="peace_title_div">
+            <h2>Peace Process</h2>
+        </div>
+        <div id="peace_content">
+            <pre id="peace"></pre>
+        </div>
+    </div>
+    <div id="year_process">
+        <div id="year_title_div">
+            <h2>Conflict/Instability (Year)</h2>
+        </div>
+        <div id="year_content">
+            <pre id="year"></pre>
+        </div>
+    </div>
+    <div id="month_process">
+        <div id="month_title_div">
+            <h2>Conflict/Instability (Month)</h2>
+        </div>
+        <div id="month_content">
+            <pre id="month"></pre>
+        </div>
+    </div>
+    <div id="map"></div>
+    <br>
+    <div class="map-overlay top"></div>
+    <div id="gradient"></div>
+    <div class="float-container">
+        <div class="float-child">
+            <img style="height: 20px;" id="icon_leg" src="img/peace2.png" alt="PeaceRep Logo" />
+            <p id="legend_p">Agreement</p>
+        </div>
+        <div class="float-child">
+            <img style="height: 20px;" id="icon_leg" src="img/local.png" alt="PeaceRep Logo" />
+            <p id="legend_p">Local</p>
+        </div>
+        <div class="float-child">
+            <img style="height: 20px;" id="icon_leg" src="img/completed.png" alt="PeaceRep Logo" />
+            <p id="legend_p">Completed</p>
+        </div>
+        <div class="float-child">
+            <img style="height: 20px;" id="icon_leg" src="img/stop.png" alt="PeaceRep Logo" />
+            <p id="legend_p">Stalled</p>
+        </div>
+        <div class="float-child">
+            <img style="height: 20px;" id="icon_leg" src="img/clock.png" alt="PeaceRep Logo" />
+            <p id="legend_p">Long-term</p>
+        </div>
+        <div class="float-child">
+            <img style="height: 20px;" id="icon_leg" src="img/process.png" alt="PeaceRep Logo" />
+            <p id="legend_p">Ongoing</p>
+        </div>
+    </div>
+    <div id="update">[Last Updated 29-11-2023]</div>
+    <script>
+        //adapt to screen
+        let screen_height = window.innerHeight - 100;
+        let screen_width = window.innerWidth - 80;
+        d3.selectAll("#year_process, #month_process")
+            .style("height", screen_height / 2 + "px")
+            .style("width", screen_width * 0.28 + "px")
+            .style("left", - screen_width * 0.30 + "px")
+        d3.select("#peace_process")
+            .style("height", screen_height / 2 + "px")
+            .style("width", screen_width * 0.28 + "px")
+            .style("right", - screen_width * 0.30 + "px")
+
+        d3.selectAll("#year_content, #month_content, #peace_content")
+            .style("height", screen_height / 2 - 42 + "px")
+            .style("width", screen_width * 0.28 + "px")
+        d3.selectAll("#year_title_div, #peace_title_div, #month_title_div")
+            .style("width", screen_width * 0.28 + "px")
+
+
+        //gradient legend
+        let colorScale = d3.scaleLinear()
+            .domain([5, 4200])
+            .range(['#feda00', '#400000']);
+        // append a defs (for definition) element to SVG
+        let svgLegend = d3.select('#gradient').append('svg')
+            .attr("width", screen_width * 0.18)
+            .attr("height", 70);
+        let defs = svgLegend.append('defs');
+        // append a linearGradient element to the defs and give it a unique id
+        let linearGradient = defs.append('linearGradient')
+            .attr('id', 'linear-gradient');
+        // horizontal gradient
+        linearGradient
+            .attr("x1", "0%")
+            .attr("y1", "0%")
+            .attr("x2", "100%")
+            .attr("y2", "0%");
+        // append multiple color stops by using D3's data/enter step
+        linearGradient.selectAll("stop")
+            .data([
+                { offset: "0%", color: "#feda00" },
+                { offset: "20%", color: "red" },
+                { offset: "100%", color: "#400000" }
+            ])
+            .join("stop")
+            .attr("offset", function (d) {
+                return d.offset;
+            })
+            .attr("stop-color", function (d) {
+                return d.color;
+            });
+        // append title
+        svgLegend.append("text")
+            .attr("class", "legendTitle")
+            .attr("x", 0)
+            .attr("y", 20)
+            .style("text-anchor", "left")
+            .text("No. of UCDP Conflicts (12 Months)");
+        // draw the rectangle and fill with gradient
+        svgLegend.append("rect")
+            .attr("x", 0)
+            .attr("y", 30)
+            .attr("width", screen_width * 0.18 - 10)
+            .attr("height", 15)
+            .style("fill", "url(#linear-gradient)");
+        //create tick marks
+        let xLeg = d3.scaleLinear()
+            .domain([5, 4200])
+            .range([5, screen_width * 0.18]);
+        let axisLeg = d3.axisBottom(xLeg)
+            .tickValues(colorScale.domain())
+        svgLegend
+            .attr("class", "axis")
+            .append("g")
+            .attr("transform", "translate(1, 40)")
+            .style("text-anchor", "end")
+            .call(axisLeg);
+
+        Promise.all([
+            d3.csv("data/prog.csv"),
+            d3.csv("data/newest_data.csv"),
+        ]).then(function (files) {
+            // load the data
+            const data = files[1]
+            let country_array = []
+            let the_data = []
+            data.forEach(function (d) {
+                console.log(d);
+                const found = files[0].find((element) => element.iso == d.iso3c);
+                console.log(found);
+                if (found !== undefined) {
+                    let index = found.c_bell;
+                    country_array.push(d.country_entity)
+                    d.Lat = +d.Lat;
+                    d.Long = +d.Long;
+                    let to_push = {
+                        'type': 'Feature',
+                        'properties': {
+                            'country': d.country_entity,
+                            'iso': d.iso3c,
+                            'index': index,
+                            'peace': d["peace process"],
+                            'year': d["last year"],
+                            'month': d["last month"],
+                            'iconSize': [25, 25]
+                        },
+                        'geometry': {
+                            'type': 'Point',
+                            'coordinates': [d.Long, d.Lat]
+                        }
+                    }
+                    the_data.push(to_push)
+                }
+            })
+            const icon_data = {
+                'type': 'FeatureCollection',
+                'features': the_data
+            };
+            // console.log(icon_data);
+            //dropdown
+            let select = document.getElementById("dropdown");
+            //populate the dropdown
+            for (var i = 0; i < country_array.length; i++) {
+                var opt = country_array[i];
+                var el = document.createElement("option");
+                el.textContent = opt;
+                el.value = opt;
+                select.appendChild(el);
+            }
+            // selecting a country in dropdown
+            $('#dropdown').change(function () {
+                let selected = $(this).val()
+                let countries = all_countries.features;
+                let the_country = countries.find(function (d) {
+                    console.log(d);
+                    return d.properties.ADMIN == selected
+                })
+                console.log(the_country);
+                if (selected == "Russia") {
+                    bound_box = [68.1434025400001, 86.74555084800015,
+                        97.36225305200006, 35.49540557900009]
+                }
+                else if (selected == "United States of America") {
+                    bound_box = [-160.3688042289999, 24.546282924364334,
+                    -36.7005916009999, 32.71283640500015]
+                }
+                else if (selected == "France") {
+                    bound_box = [-8.691314256999902, 40.909613348000065,
+                        12.771169467000021, 50.84788646]
+                }
+                else {
+                    bound_box = turf.bbox(the_country);
+                }
+
+                map.fitBounds(bound_box, {
+                    padding: 50
+                });
+
+
+                let the_info = icon_data.features
+                let individual_info = the_info.find(function (d) {
+                    return d.properties.country == selected
+                })
+
+
+                d3.select("#big_title").text(selected)
+
+                d3.select("#peace")
+                    .html(individual_info.properties.peace)
+                d3.select("#peace_process")
+                    .transition().duration(800)
+                    .style("right", 10 + "px")
+
+                d3.select("#year")
+                    .html(individual_info.properties.year)
+                d3.select("#year_process")
+                    .transition().duration(800)
+                    .style("left", 10 + "px")
+
+                d3.select("#month")
+                    .html(individual_info.properties.month)
+                d3.select("#month_process")
+                    .transition().duration(800)
+                    .style("left", 10 + "px")
+
+            })
+
+            // load mapbox
+            mapboxgl.accessToken = 'pk.eyJ1IjoidG9tYXN2YW5jaXNpbiIsImEiOiJjajF6M3VieDQwMDB2MzNxbXlpc3BzaW02In0.ZgGNabXd7yu15BHiN62GCQ';
+            const map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/dark-v11',
+                center: [40.137343, 30.137451],
+                zoom: 2.3,
+                maxZoom: 5.5,
+                minZoom: 2,
+                attributionControl: false
+            });
+
+            let nav = new mapboxgl.NavigationControl();
+            map.addControl(nav, 'bottom-left');
+
+            let hoveredPolygonId = null;
+            //draw polygons
+            map.on('load', () => {
+                // Add a data source containing GeoJSON data.
+                map.addSource('states', {
+                    'type': 'geojson',
+                    'data': all_countries,
+                    'generateId': true //This ensures that all features have unique IDs
+                });
+                // Add a new layer to visualize the polygon.
+                map.addLayer({
+                    'id': 'state-fills',
+                    'type': 'fill',
+                    'source': 'states',
+                    'layout': {},
+                    'paint': {
+                        'fill-color': {
+                            property: 'number',
+                            stops: [[1, '#feda00'], [100, 'red'], [1000, '#400000']]
+                        },
+                        'fill-opacity':
+                            [
+                                'case',
+                                ['<', ["get", "number"], 5],
+                                0,
+                                ['>=', ["get", "number"], 5],
+                                1,
+                                1
+                            ],
+                        // 'fill-opacity': [
+                        //     'case',
+                        //     ['boolean', ['feature-state', 'hover'], false],
+                        //     1,
+                        //     0.9
+                        // ],
+                        // 'fill-opacity-transition': { duration: 500 }  
+                    }
+                });
+
+                map.addLayer({
+                    'id': 'outline',
+                    'type': 'line',
+                    'source': 'states',
+                    'layout': {},
+                    'paint': {
+                        'line-color': '#000',
+                        'line-width': [
+                            'case',
+                            ['boolean', ['feature-state', 'hover'], false],
+                            1.5,
+                            0
+                        ],
+
+                    }
+                });
+                // dove icons and events
+                for (const marker of icon_data.features) {
+                    // Create a DOM element for each marker.
+                    const el = document.createElement('div');
+                    const width = marker.properties.iconSize[0];
+                    const height = marker.properties.iconSize[1];
+                    el.className = 'marker';
+                    if (marker.properties.index == 1) {
+                        el.style.backgroundImage = `url(img/process.png)`;
+                    }
+                    else if (marker.properties.index == 2) {
+                        el.style.backgroundImage = `url(img/clock.png)`;
+                    }
+                    else if (marker.properties.index == 3) {
+                        el.style.backgroundImage = `url(img/stop.png)`;
+                    }
+                    else if (marker.properties.index == 4) {
+                        el.style.backgroundImage = `url(img/completed.png)`;
+                    }
+                    else if (marker.properties.index == 6) {
+                        el.style.backgroundImage = `url(img/local.png)`;
+                    }
+                    else {
+                        el.style.backgroundImage = `url(img/peace2.png)`;
+
+                    }
+                    el.style.width = `${width}px`;
+                    el.style.height = `${height}px`;
+                    el.style.backgroundSize = '100%';
+                    el.style.cursor = "pointer"
+
+                    // el.addEventListener('mouseover', () => {
+                    //     el.style.width = "30px"
+                    //     el.style.height = "30px"
+                    // })
+                    // el.addEventListener('mouseout', () => {
+                    //     el.style.width = `${width}px`;
+                    //     el.style.height = `${height}px`;
+                    // })
+
+                    let the_country
+                    el.addEventListener('click', () => {
+                        let clicked_country = marker.properties.country;
+                        d3.select("#big_title").text(clicked_country)
+                        let bound_box
+                        if (clicked_country == "Russia") {
+                            bound_box = [68.1434025400001, 86.74555084800015,
+                                97.36225305200006, 35.49540557900009]
+                        }
+                        else if (clicked_country == "United States of America") {
+                            bound_box = [-160.3688042289999, 24.546282924364334,
+                            -36.7005916009999, 32.71283640500015]
+                        }
+                        else if (clicked_country == "France") {
+                            bound_box = [-8.691314256999902, 40.909613348000065,
+                                12.771169467000021, 50.84788646]
+                        }
+                        else {
+                            let countries = all_countries.features;
+                            the_country = countries.find(function (d) {
+                                return d.properties.ADMIN == clicked_country
+                            })
+                            bound_box = turf.bbox(the_country);
+                        }
+
+                        map.fitBounds(bound_box, {
+                            padding: 50
+                        });
+                        d3.select("#peace")
+                            .html(marker.properties.peace)
+                        d3.select("#peace_process")
+                            .transition().duration(800)
+                            .style("right", 10 + "px")
+
+                        d3.select("#year")
+                            .html(marker.properties.year)
+                        d3.select("#year_process")
+                            .transition().duration(800)
+                            .style("left", 10 + "px")
+
+                        d3.select("#month")
+                            .html(marker.properties.month)
+                        d3.select("#month_process")
+                            .transition().duration(800)
+                            .style("left", 10 + "px")
+
+                    });
+                    // add markers to the map.
+                    new mapboxgl.Marker(el)
+                        .setLngLat(marker.geometry.coordinates)
+                        .addTo(map);
+                }
+
+                // d3.selectAll(".marker").style("cursor", none)
+                // home button
+                d3.select(".button").on("click", function (m) {
+                    $('#dropdown option').prop('selected', function () {
+                        return this.defaultSelected;
+                    });
+                    map.flyTo({ center: [40.137343, 30.137451], zoom: 2.5 });
+                    d3.select("#big_title").text("Conflict and Peace Process Map")
+                    d3.select("#peace_process")
+                        .transition().duration(800)
+                        .style("right", - screen_width * 0.30 + "px")
+                    d3.selectAll("#year_process, #month_process")
+                        .transition().duration(800)
+                        .style("left", - screen_width * 0.30 + "px")
+                })
+
+                // Add a black outline around the polygon.
+                // map.addLayer({
+                //     'id': 'state-borders',
+                //     'type': 'line',
+                //     'source': 'states',
+                //     'layout': {},
+                //     'paint': {
+                //         'line-color': '#000',
+                //         'line-width': [
+                //             'case',
+                //             ['boolean', ['feature-state', 'hover'], false],
+                //             5,
+                //             0.5
+                //         ],
+
+                //     }
+                // });
+
+                map.on('click', 'state-fills', (e) => {
+                    console.log(e.features[0]);
+                    let clicked_country = e.features[0].properties.ADMIN;
+                    let bound_box
+                    if (clicked_country == "Russia") {
+                        bound_box = [68.1434025400001, 86.74555084800015,
+                            97.36225305200006, 35.49540557900009]
+                    }
+                    else if (clicked_country == "United States of America") {
+                        bound_box = [-160.3688042289999, 24.546282924364334,
+                        -36.7005916009999, 32.71283640500015]
+                    }
+                    else if (clicked_country == "France") {
+                        bound_box = [-8.691314256999902, 40.909613348000065,
+                            12.771169467000021, 50.84788646]
+                    }
+                    else {
+                        let countries = all_countries.features;
+                        the_country = countries.find(function (d) {
+                            return d.properties.ADMIN == clicked_country
+                        })
+                        bound_box = turf.bbox(the_country);
+                    }
+
+                    map.fitBounds(bound_box, {
+                        padding: 50
+                    });
+
+                    let the_info = icon_data.features
+                    let individual_info = the_info.find(function (d) {
+                        return d.properties.country == clicked_country
+                    })
+
+                    d3.select("#big_title").text(clicked_country)
+
+                    d3.select("#peace")
+                        .html(individual_info.properties.peace)
+                    d3.select("#peace_process")
+                        .transition().duration(800)
+                        .style("right", 10 + "px")
+
+                    d3.select("#year")
+                        .html(individual_info.properties.year)
+                    d3.select("#year_process")
+                        .transition().duration(800)
+                        .style("left", 10 + "px")
+
+                    d3.select("#month")
+                        .html(individual_info.properties.month)
+                    d3.select("#month_process")
+                        .transition().duration(800)
+                        .style("left", 10 + "px")
+                });
+
+                // When the user moves their mouse over the state-fill layer, we'll update the
+                // feature state for the feature under the mouse.
+                map.on('mousemove', 'state-fills', (e) => {
+                    map.getCanvas().style.cursor = 'pointer'
+                    if (e.features.length > 0) {
+                        if (hoveredPolygonId !== null) {
+                            map.setFeatureState(
+                                { source: 'states', id: hoveredPolygonId },
+                                { hover: false }
+                            );
+                            map.setFeatureState(
+                                { source: 'states', id: hoveredPolygonId },
+                                { hover: false }
+                            );
+                        }
+                        hoveredPolygonId = e.features[0].id;
+                        map.setFeatureState(
+                            { source: 'states', id: hoveredPolygonId },
+                            { hover: true }
+                        );
+                    }
+                });
+
+                // When the mouse leaves the state-fill layer, update the feature state of the
+                // previously hovered feature.
+                map.on('mouseleave', 'state-fills', () => {
+                    map.getCanvas().style.cursor = ''
+                    if (hoveredPolygonId !== null) {
+                        map.setFeatureState(
+                            { source: 'states', id: hoveredPolygonId },
+                            { hover: false }
+                        );
+                    }
+                    hoveredPolygonId = null;
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
